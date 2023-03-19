@@ -1,56 +1,98 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
 import {
   createBrowserRouter,
   RouterProvider,
   createRoutesFromElements,
   Route,
-  redirect,
 } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { SnackbarProvider } from "notistack";
+
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import theme from "./theme/theme";
+import "./index.css";
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+
 import { Layout } from "./routes/layout";
-import { TeacherPage } from "./routes/teacher";
-import { SubjectPage } from "./routes/subject";
+import { ResultPage } from "./routes/result";
 import { SearchPage } from "./routes/search";
 import { ErrorPage } from "./routes/error";
 import { HomePage } from "./routes/home";
+import { LoginPage } from "./routes/login";
+import { SigninPage } from "./routes/signin";
+import { getSearchResult } from "./api";
 
-const API_URL = "https://forca-2-0.onrender.com";
+const queryClient = new QueryClient();
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route
-      path="/"
-      element={<Layout />}
-      errorElement={<ErrorPage />}
-      // loader={() => redirect("/home")}
-    >
+    <Route path="/" element={<Layout />} errorElement={<ErrorPage />}>
       <Route path="home" element={<HomePage />} />
+      <Route path="login" element={<LoginPage />} />
+      <Route path="signin" element={<SigninPage />} />
       <Route
-        path="teacher/:teacherId"
-        element={<TeacherPage />}
-        // loader={({ params }) => {
-        //   return fetch(`${API_URL}/teachers/${params.teacherId}`);
-        // }}
+        path="teachers/:teacherId"
+        element={<ResultPage type="teachers" />}
+        loader={async ({ params }) => {
+          try {
+            const teacher = await fetch(
+              `${API_URL}/teachers/${params.teacherId}`
+            );
+            return teacher;
+          } catch (err) {
+            console.log(err);
+            return err;
+          }
+        }}
       />
       <Route
-        path="subject/:subjectId"
-        element={<SubjectPage />}
-        // loader={({ params }) => {
-        //   return fetch(`${API_URL}/subjects/${params.subjectId}`);
-        // }}
+        path="subjects/:subjectId"
+        element={<ResultPage type="subjects" />}
+        loader={async ({ params }) => {
+          try {
+            const subject = await fetch(
+              `${API_URL}/subjects/${params.subjectId}`
+            );
+            return subject;
+          } catch (err) {
+            console.log(err);
+            return err;
+          }
+        }}
       />
-      <Route path="search" element={<SearchPage />} />
+      <Route
+        path="search"
+        element={<SearchPage />}
+        loader={async ({ params, request }) => {
+          const type = new URL(request.url).searchParams.get("type") as
+            | "teachers"
+            | "subjects";
+          return getSearchResult(type);
+        }}
+      />
     </Route>
   )
 );
 
 createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
+  <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}>
+    <React.StrictMode>
+      <ThemeProvider theme={theme}>
+        <SnackbarProvider>
+          <CssBaseline enableColorScheme />
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </SnackbarProvider>
+      </ThemeProvider>
+    </React.StrictMode>
+  </GoogleOAuthProvider>
 );

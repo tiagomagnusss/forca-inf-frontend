@@ -11,8 +11,27 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Assessment } from "./assessments";
 
-export function Filters() {
+type Props = { assessments: Assessment[]; type: "teachers" | "subjects" };
+
+export function Filters({ assessments, type }: Props) {
+  const semesters = [...new Set(assessments.map((a) => a.semester))];
+  const grades = [...new Set(assessments.map((a) => a.grade))];
+  const subjects = assessments
+    .map((a) => a.subject)
+    .filter(
+      (value, index, self) =>
+        index === self.findIndex((t) => t?._id === value?._id)
+    );
+
+  const teachers = assessments
+    .map((a) => a.teacher)
+    .filter(
+      (value, index, self) =>
+        index === self.findIndex((t) => t?._id === value?._id)
+    );
+
   const [checked, setChecked] = useState([0]);
 
   const handleToggle = (value: number) => () => {
@@ -28,82 +47,58 @@ export function Filters() {
     setChecked(newChecked);
   };
 
+  const filters: { title: string; options: any[] }[] = [
+    { title: "Semestre", options: semesters },
+    { title: "Conceito", options: grades },
+  ];
+
+  filters.push(
+    type === "teachers"
+      ? { title: "Disciplina", options: subjects }
+      : { title: "Professores", options: teachers }
+  );
+
   return (
     <Box sx={{ mt: 3 }}>
-      <Accordion defaultExpanded disableGutters>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
+      {filters.map((filter) => (
+        <Accordion
+          defaultExpanded
+          disableGutters
+          elevation={0}
+          key={filter.title}
         >
-          <Typography>Accordion 1</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <List
-            sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
-          >
-            {[0, 1, 2, 3].map((value) => {
-              const labelId = `checkbox-list-label-${value}`;
-
-              return (
-                <ListItem
-                  key={value}
-                  // secondaryAction={
-                  //   <IconButton edge="end" aria-label="comments">
-                  //     <CommentIcon />
-                  //   </IconButton>
-                  // }
-                  disablePadding
-                >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>{filter.title}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <List
+              sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
+            >
+              {filter.options.map((value, index) => (
+                <ListItem key={index} disablePadding>
                   <ListItemButton
                     role={undefined}
-                    onClick={handleToggle(value)}
+                    onClick={handleToggle(index)}
                     dense
                   >
                     <ListItemIcon>
                       <Checkbox
                         edge="start"
-                        checked={checked.indexOf(value) !== -1}
+                        checked={checked.indexOf(index) !== -1}
                         tabIndex={-1}
                         disableRipple
-                        inputProps={{ "aria-labelledby": labelId }}
                       />
                     </ListItemIcon>
                     <ListItemText
-                      id={labelId}
-                      primary={`Filtro ${value + 1}`}
+                      primary={typeof value === "string" ? value : value?.name}
                     />
                   </ListItemButton>
                 </ListItem>
-              );
-            })}
-          </List>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion defaultExpanded disableGutters>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel2a-content"
-          id="panel2a-header"
-        >
-          <Typography>Accordion 2</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-            malesuada lacus ex, sit amet blandit leo lobortis eget.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion defaultExpanded disableGutters>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel3a-content"
-          id="panel3a-header"
-        >
-          <Typography>Disabled Accordion</Typography>
-        </AccordionSummary>
-      </Accordion>
+              ))}
+            </List>
+          </AccordionDetails>
+        </Accordion>
+      ))}
     </Box>
   );
 }

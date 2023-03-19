@@ -1,9 +1,54 @@
 import React from "react";
-import { AppBar, Container, Stack, Toolbar, Typography } from "@mui/material";
+import {
+  AppBar,
+  Button,
+  Container,
+  Stack,
+  Toolbar,
+  IconButton,
+  Typography,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 import logo from "../assets/gallows.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import { GoogleLogin, googleLogout } from "@react-oauth/google";
+import { useStore } from "../hooks/useStore";
+import { login } from "../api";
 
-export default function SearchAppBar() {
+export function Navbar() {
+  const navigate = useNavigate();
+  const { authData, setAuthData } = useStore((state: any) => state);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = async () => {
+    setAnchorEl(null);
+    navigate("/login");
+    // try {
+    //   await DataStore.clear();
+    //   await Auth.signOut();
+    // } catch (error) {
+    //   console.log("error signing out: ", error);
+    // }
+  };
+
+  const onLogin = async (credentialResponse: any) => {
+    const { data, accessToken } = await login(credentialResponse.credential);
+    localStorage.setItem("accessToken", accessToken);
+    if (!!data) {
+      setAuthData(data);
+    }
+  };
+
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
@@ -23,7 +68,7 @@ export default function SearchAppBar() {
               FORCA 2.0
             </Link>
           </Typography>
-          <Stack direction="row" spacing={6}>
+          <Stack direction="row" spacing={6} alignItems="center">
             <Link
               to="/search?type=teachers"
               style={{
@@ -44,7 +89,53 @@ export default function SearchAppBar() {
             >
               DISCIPLINAS
             </Link>
+            <IconButton
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleMenu}
+              color="inherit"
+            >
+              <AccountCircle fontSize="large" />
+            </IconButton>
           </Stack>
+          <Menu
+            id="menu-appbar"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+          >
+            {/* <MenuItem onClick={handleClose}>Profile</MenuItem> */}
+            <MenuItem>
+              {authData ? (
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => {
+                    googleLogout();
+                    setAuthData(null);
+                    window.location.reload();
+                  }}
+                >
+                  Logout
+                </Button>
+              ) : (
+                <GoogleLogin
+                  onSuccess={onLogin}
+                  onError={() => console.log("Login failed")}
+                />
+              )}
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </Container>
     </AppBar>
