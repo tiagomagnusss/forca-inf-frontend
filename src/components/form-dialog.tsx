@@ -44,6 +44,7 @@ const getSemesters = () => {
   yearsArray.map((item) => {
     result.push(`${item}/1`);
     result.push(`${item}/2`);
+    return item;
   });
 
   return result;
