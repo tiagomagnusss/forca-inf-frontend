@@ -1,5 +1,3 @@
-import { Assessment } from "../components/assessments";
-
 export async function login(token: string) {
   try {
     const res = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {

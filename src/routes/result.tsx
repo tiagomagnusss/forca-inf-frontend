@@ -2,8 +2,10 @@ import React, { FC, ReactNode, useState } from "react";
 import { Button, Grid, Paper, Typography, Stack } from "@mui/material";
 import { Filters } from "../components/filters";
 import { Assessment, Assessments } from "../components/assessments";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useLocation, useNavigate } from "react-router-dom";
 import { FormDialog } from "../components/form-dialog";
+import { useSnackbar } from "notistack";
+import { useStore } from "../hooks/useStore";
 
 type Props = {
   children?: ReactNode;
@@ -26,9 +28,22 @@ type Teacher = {
 };
 
 export const ResultPage: FC<Props> = ({ type }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const result = useLoaderData() as Subject | Teacher;
   const isTeacher = type === "teachers";
   const [openForm, setOpenForm] = useState(false);
+  const { authData } = useStore((state: any) => state);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const onOpenForm = () => {
+    if (!authData)
+      enqueueSnackbar(
+        "Você precisa estar logado para escrever uma avaliação.",
+        { variant: "error" }
+      );
+    else setOpenForm(true);
+  };
 
   return (
     <Grid container spacing={2}>
@@ -43,9 +58,7 @@ export const ResultPage: FC<Props> = ({ type }) => {
                 {!isTeacher && `${(result as Subject).code} - `} {result.name}
               </Typography>
             </div>
-            <Button onClick={() => setOpenForm(true)}>
-              Adicionar avaliação
-            </Button>
+            <Button onClick={onOpenForm}>Adicionar avaliação</Button>
           </Stack>
         </Paper>
       </Grid>
@@ -69,7 +82,10 @@ export const ResultPage: FC<Props> = ({ type }) => {
         <FormDialog
           type={type}
           selectedValue={result._id}
-          onClose={() => setOpenForm(false)}
+          onClose={() => {
+            setOpenForm(false);
+            navigate(location.pathname, { replace: true });
+          }}
         />
       )}
     </Grid>

@@ -11,14 +11,13 @@ import {
   MenuItem,
 } from "@mui/material";
 import logo from "../assets/gallows.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import { useStore } from "../hooks/useStore";
 import { login } from "../api";
 
 export function Navbar() {
-  const navigate = useNavigate();
   const { authData, setAuthData } = useStore((state: any) => state);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -28,17 +27,6 @@ export function Navbar() {
 
   const handleClose = () => {
     setAnchorEl(null);
-  };
-
-  const handleSignOut = async () => {
-    setAnchorEl(null);
-    navigate("/login");
-    // try {
-    //   await DataStore.clear();
-    //   await Auth.signOut();
-    // } catch (error) {
-    //   console.log("error signing out: ", error);
-    // }
   };
 
   const onLogin = async (credentialResponse: any) => {
@@ -114,8 +102,13 @@ export function Navbar() {
               horizontal: "right",
             }}
           >
-            {/* <MenuItem onClick={handleClose}>Profile</MenuItem> */}
-            <MenuItem>
+            {authData && (
+              <MenuItem sx={{ textAlign: "center" }}>
+                Logado como <br />
+                {authData?.name || ""}
+              </MenuItem>
+            )}
+            <MenuItem sx={{ justifyContent: "center" }}>
               {authData ? (
                 <Button
                   variant="contained"

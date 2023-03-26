@@ -24,8 +24,6 @@ import { ResultPage } from "./routes/result";
 import { SearchPage } from "./routes/search";
 import { ErrorPage } from "./routes/error";
 import { HomePage } from "./routes/home";
-import { LoginPage } from "./routes/login";
-import { SigninPage } from "./routes/signin";
 import { getSearchResult } from "./api";
 
 const queryClient = new QueryClient();
@@ -36,8 +34,6 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />} errorElement={<ErrorPage />}>
       <Route path="home" element={<HomePage />} />
-      <Route path="login" element={<LoginPage />} />
-      <Route path="signin" element={<SigninPage />} />
       <Route
         path="teachers/:teacherId"
         element={<ResultPage type="teachers" />}

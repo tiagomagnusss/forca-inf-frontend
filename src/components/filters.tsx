@@ -12,10 +12,13 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Assessment } from "./assessments";
+import { useSearchParams } from "react-router-dom";
 
 type Props = { assessments: Assessment[]; type: "teachers" | "subjects" };
+type FilterType = "Semestre" | "Conceito" | "Disciplina" | "Professores";
 
 export function Filters({ assessments, type }: Props) {
+  let [searchParams, setSearchParams] = useSearchParams();
   const semesters = [...new Set(assessments.map((a) => a.semester))];
   const grades = [...new Set(assessments.map((a) => a.grade))];
   const subjects = assessments
@@ -32,22 +35,15 @@ export function Filters({ assessments, type }: Props) {
         index === self.findIndex((t) => t?._id === value?._id)
     );
 
-  const [checked, setChecked] = useState([0]);
-
-  const handleToggle = (value: number) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(value);
-    } else {
-      newChecked.splice(currentIndex, 1);
-    }
-
-    setChecked(newChecked);
+  const handleToggle = (value: string, filter: FilterType) => () => {
+    searchParams.set(filter, value);
+    setSearchParams(searchParams);
   };
 
-  const filters: { title: string; options: any[] }[] = [
+  const filters: {
+    title: FilterType;
+    options: any[];
+  }[] = [
     { title: "Semestre", options: semesters },
     { title: "Conceito", options: grades },
   ];
@@ -78,13 +74,20 @@ export function Filters({ assessments, type }: Props) {
                 <ListItem key={index} disablePadding>
                   <ListItemButton
                     role={undefined}
-                    onClick={handleToggle(index)}
+                    onClick={handleToggle(
+                      typeof value === "string" ? value : value?._id,
+                      filter.title
+                    )}
                     dense
                   >
                     <ListItemIcon>
                       <Checkbox
                         edge="start"
-                        checked={checked.indexOf(index) !== -1}
+                        checked={
+                          typeof value === "string"
+                            ? searchParams.get(filter.title) === value
+                            : searchParams.get(filter.title) === value?._id
+                        }
                         tabIndex={-1}
                         disableRipple
                       />
